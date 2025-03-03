@@ -33,7 +33,7 @@ C.fixed[C.fixed != 0] <- NA
 print(C.fixed)
 
 
-ssmPQF <- multinomialTS::mnTS(Y = Y, X = X, Tsample = Tsample, B0.start = B0.start, B.start = B.start,
+ssmPQF <- multinomialTS::mnTS(Y = Y[Tsample, ], X = X, Tsample = Tsample, B0.start = B0.start, B.start = B.start,
                            C.start = C.start, C.fixed = C.fixed, B0.fixed = B0.fixed,
                            V.fixed = V.fixed, V.start = V.start,
                            B.fixed = B.fixed, dispersion.fixed = 1, maxit.optim = 1e+07)
@@ -47,7 +47,7 @@ C.fixed <- C.start
 C.fixed[C.fixed != 0] <- NA
 print(C.fixed)
 
-ssmPF <- multinomialTS::mnTS(Y = Y, X = X, Tsample = Tsample, B0.start = B0.start, B.start = B.start,
+ssmPF <- multinomialTS::mnTS(Y = Y[Tsample, ], X = X, Tsample = Tsample, B0.start = B0.start, B.start = B.start,
                            C.start = C.start, C.fixed = C.fixed, B0.fixed = B0.fixed,
                            V.fixed = V.fixed, V.start = V.start,
                            B.fixed = B.fixed, dispersion.fixed = 1, maxit.optim = 1e+07)
@@ -61,7 +61,7 @@ C.fixed <- C.start
 C.fixed[C.fixed != 0] <- NA
 print(C.fixed)
 
-ssmQF <- multinomialTS::mnTS(Y = Y, X = X, Tsample = Tsample, B0.start = B0.start, B.start = B.start,
+ssmQF <- multinomialTS::mnTS(Y = Y[Tsample, ], X = X, Tsample = Tsample, B0.start = B0.start, B.start = B.start,
                              C.start = C.start, C.fixed = C.fixed, B0.fixed = B0.fixed,
                              V.fixed = V.fixed, V.start = V.start,
                              B.fixed = B.fixed, dispersion.fixed = 1, maxit.optim = 1e+07)
@@ -102,7 +102,7 @@ refit_func <- function(mod, n_refit = 10) {
     print(C.start)
     print(C.fixed)
 
-    ssm <- multinomialTS::mnTS(Y = Y, X = X, Tsample = Tsample, B0.start = B0.start, B.start = B.start,
+    ssm <- multinomialTS::mnTS(Y = Y[Tsample, ], X = X, Tsample = Tsample, B0.start = B0.start, B.start = B.start,
                                C.start = C.start, C.fixed = C.fixed, B0.fixed = B0.fixed,
                                V.fixed = V.fixed, V.start = V.start,
                                B.fixed = B.fixed, dispersion.fixed = 1, maxit.optim = 1e+07)
