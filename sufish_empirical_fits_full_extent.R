@@ -158,8 +158,8 @@ sunfish_spp_binned <- bind_cols(bins = sunfish_bins, sunfish_spp_wide) |>
   group_by(bins) |> # Group the data by the bins so that we calculate per time bin
   summarise(across(c(other, all_of(target_spp)), \(x) sum(x ,na.rm = TRUE)),
             age = mean(age, na.rm = TRUE)) |>
-              arrange(desc(age)) |>
-  filter(bins <= 122) # clipping to holocene only
+              arrange(desc(age))
+  # filter(bins <= 122) # for clipping to holocene only
 
 
 ll_bins <-
@@ -365,21 +365,25 @@ saveRDS(res_par, "./empirical_results/sunfish_res_par_ll_bootstraps_1500.rds")
 
 ## Bootstrap plotting B ---------------------------------------------------
 
-res_int <- readRDS("./empirical_results/sunfish_mnts_ll_pqf_bootstraps_1000.rds")
+res_par <- readRDS("./empirical_results/sunfish_res_par_ll_bootstraps_1500.rds")
+
+lapply(res_par, \(x) {
+  length(x[[3]])
+})
 
 X_names_list <- c(
   mean_ll ="Lake level"
 )
 
-mods_boot <- map(res_int, ~ {
+mods_boot <- map(res_par, ~ {
   as_tibble(.x[[2]]) |>
     pivot_longer(-c(logLik, opt.convergence))
 }) |>
-  bind_rows()
+  bind_rows(.id = "mod")
 
 mods_boot_68 <- mods_boot |>
   #  filter(opt.convergence == 0) |>
-  group_by(name) |>
+  group_by(mod, name) |>
   summarise(boot_mean = mean(value),
             boot_sd = sd(value),
             upper_68 = quantile(value, probs = 0.84),
@@ -399,8 +403,7 @@ mods_boot_table <- mods_boot_68 |>
                                   x == "y4" ~ "Fagus",
                                   x == "y5" ~ "Quercus",
                                   x == "y6" ~ "Betula",
-                                  TRUE ~ x  # Keep other values unchanged
-                                ))) |>
+                                  TRUE ~ x))) |>
   filter(!str_detect(name, "v."))
 
 mods_boot_68_B <- mods_boot_68 |>
@@ -414,8 +417,7 @@ mods_boot_68_B <- mods_boot_68 |>
                                   x == "y4" ~ "_Fagus_",
                                   x == "y5" ~ "_Quercus_",
                                   x == "y6" ~ "_Betula_",
-                                  TRUE ~ x  # Keep other values unchanged
-                                )))
+                                  TRUE ~ x)))
 
 mod_plots_B <- mods_boot_68_B |>
   mutate(panel = "Lake level effect") |>
@@ -426,7 +428,7 @@ mod_plots_B <- mods_boot_68_B |>
                width = .2, alpha = 0.5) +
   scale_color_manual(name = "Significance", labels = c("> 0.05", "< 0.05"),
                     values = c("#202020", "#d80000")) +
-  facet_wrap(~panel) +
+  facet_wrap(~mod) +
   labs(x = "Taxa", y = "Coefficient") +
   theme_bw() +
   theme(
@@ -446,7 +448,8 @@ mod_plots_B <- mods_boot_68_B |>
 names_factor <- c(map2_vec(c("Other", target_spp), c("Other", target_spp), \(x, y) paste(x, y, sep = ".")),
                   c("Fagus.Quercus", "Quercus.Fagus", "Betula.Tsuga",
                     "Tsuga.Betula", "Tsuga.Fagus", "Fagus.Tsuga",
-                    "P.strobu.Tsuga", "Tsuga.P.strobu", "Tsuga.Quercus", "Quercus.Tsuga"))
+                    "P.strobu.Tsuga", "Tsuga.P.strobu", "Tsuga.Quercus", "Quercus.Tsuga",
+                    "P.strobu.Fagus", "Fagus.P.strobu", "P.strobu.Quercus", "Quercus.P.strobu"))
 
 
 mods_boot_68_C <- mods_boot_68 |>
@@ -463,15 +466,14 @@ mods_boot_68_C <- mods_boot_68 |>
                                   x == "y4" ~ "Fagus",
                                   x == "y5" ~ "Quercus",
                                   x == "y6" ~ "Betula",
-                                  TRUE ~ x  # Keep other values unchanged
-                                )),
-         name = fct(name, levels = names_factor),
-         name = str_replace_all(name, pattern = "P\\.strobu", replacement = "_P.strobus_"),
-         name = str_replace_all(name, pattern = "Tsuga", replacement = "_Tsuga_"))
+                                  TRUE ~ x)),
+         name = fct(name, levels = names_factor))
+         # name = str_replace_all(name, pattern = "P\\.strobu", replacement = "_P.strobus_"),
+         # name = str_replace_all(name, pattern = "Tsuga", replacement = "_Tsuga_"))
 
 
 mod_plots_C <- mods_boot_68_C |>
-  filter(name %in% c("_P.strobus_._Tsuga_", "_Tsuga_._P.strobus_")) |>
+  # filter(name %in% c("_P.strobus_._Tsuga_", "_Tsuga_._P.strobus_")) |>
   mutate(panel = "Species interactions") |>
   ggplot(aes(x = name, y = boot_mean)) +
   geom_point() +
@@ -479,7 +481,7 @@ mod_plots_C <- mods_boot_68_C |>
   geom_errorbar(aes(ymin = lower_68, ymax = upper_68),
                 width = .2, alpha = 0.5) +
   labs(x = "Taxa", y = NULL) +
-  facet_wrap(~panel) +  # adds the strip
+  facet_wrap(~mod) +  # adds the strip
   theme_bw() +
   theme(
     axis.text = element_markdown(size = 10, angle = 45, hjust = 1),
