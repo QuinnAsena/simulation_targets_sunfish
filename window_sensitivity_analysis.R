@@ -271,17 +271,17 @@ bin_sensitivity_res <- future_lapply(bin_sensitivity_data, \(x) {
   return(mnTS_mod)
 })
 
-
 lapply(bin_sensitivity_res, \(x) {
   x$C
 })
+saveRDS(bin_sensitivity_res, "./sensitivity_results/bin_sensitivity_res.rds")
 
 
 # bootstrapping -----------------------------------------------------------
 
 plan(multisession, workers = length(bin_sensitivity_res))
 res_par <- furrr::future_map(
-  mods_list, multinomialTS::boot, rep = 1500,
+  bin_sensitivity_res, multinomialTS::boot, rep = 1500,
   .options = furrr_options(seed = 1984))
 
 saveRDS(res_par, "./sensitivity_results/window_sensitivity.rds")
@@ -341,7 +341,8 @@ mods_boot_68_B <- mods_boot_68 |>
                                   x == "y4" ~ "_Fagus_",
                                   x == "y5" ~ "_Quercus_",
                                   x == "y6" ~ "_Betula_",
-                                  TRUE ~ x)))
+                                  TRUE ~ x)),
+         mod = fct(mod, levels = paste0("bw_", bin_width)))
 
 mod_plots_B <- mods_boot_68_B |>
   mutate(panel = "Lake level effect") |>

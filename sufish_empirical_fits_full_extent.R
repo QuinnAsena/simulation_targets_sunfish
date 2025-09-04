@@ -349,8 +349,8 @@ lapply(mnTS_mod_qf_refit, coef)
 
 mods_list <- list(
   mnTS_mod = mnTS_mod,
-  mnTS_mod_pqf_refit = mnTS_mod_pqf_refit[[5]],
-  mnTS_mod_pf = mnTS_mod_pf,
+  mnTS_mod_pqf_refit = mnTS_mod_pqf_refit[[2]],
+  mnTS_mod_pf = mnTS_mod_pf_refit[[2]],
   mnTS_mod_qf = mnTS_mod_qf
 )
 
