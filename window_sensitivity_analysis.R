@@ -344,6 +344,9 @@ mods_boot_68_B <- mods_boot_68 |>
                                   TRUE ~ x)),
          mod = fct(mod, levels = paste0("bw_", bin_width)))
 
+bin_labs <- paste0("Bin width: ", bin_width, " yrs")
+names(bin_labs) <- levels(mods_boot_68_B$mod)
+
 mod_plots_B <- mods_boot_68_B |>
   mutate(panel = "Lake level effect") |>
   ggplot(aes(x = name, y = boot_mean, colour = as_factor(sig))) +
@@ -353,7 +356,7 @@ mod_plots_B <- mods_boot_68_B |>
                 width = .2, alpha = 0.5) +
   scale_color_manual(name = "Significance", labels = c("> 0.05", "< 0.05"),
                      values = c("#202020", "#d80000")) +
-  facet_wrap(~mod) +
+  facet_wrap(~mod, labeller = labeller(mod = bin_labs)) +
   labs(x = "Taxa", y = "Coefficient") +
   theme_bw() +
   theme(
@@ -367,4 +370,13 @@ mod_plots_B <- mods_boot_68_B |>
     legend.background = element_rect(fill = NA)
   )
 
+ggsave(
+  filename = "./figures/bootstrap_window_sensitivityC.png",
+  plot = mod_plots_B,
+  device = "png",
+  dpi = 300,
+  width = 8,
+  height = 6.5,
+  units = "in"
+)
 

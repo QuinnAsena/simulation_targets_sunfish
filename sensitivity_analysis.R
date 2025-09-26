@@ -95,7 +95,7 @@ mods_boot <- map(samp_sensitivity, ~ {
   bind_rows(.id = "resolution")
 
 mods_boot_68 <- mods_boot |>
-  #  filter(opt.convergence == 0) |> # option to finter based on convergence
+  #  filter(opt.convergence == 0) |> # option to filter based on convergence
   group_by(resolution, name) |>
   summarise(boot_mean = mean(value),
             boot_med = median(value),
@@ -118,7 +118,12 @@ mods_boot_table <- mods_boot_68 |>
                         .default = 0))
 
 mods_boot_68_B <- mods_boot_table |>
-  filter(name %in% c("x1.y2", "x1.y3"))
+  filter(name %in% c("x1.y2", "x1.y3")) |>
+  mutate(resolution = fct(resolution, levels = (paste0("Y_", rev(prop_dat)))))
+
+dat_labs <- paste0("Y = ", rev(prop_dat))
+names(dat_labs) <- levels(mods_boot_68_B$resolution)
+
 
 mod_plots_B <- mods_boot_68_B |>
   ggplot(aes(x = name, y = boot_med)) +
@@ -128,7 +133,7 @@ mod_plots_B <- mods_boot_68_B |>
                 width = .2, alpha = 0.5) +
   # scale_color_manual(name = "Significance", labels = c("> 0.05", "< 0.05"),
   #                    values = c("#202020", "#d80000")) +
-  facet_wrap(~ resolution, nrow = 1) +
+  facet_wrap(~ resolution, nrow = 1, labeller = labeller(resolution = dat_labs)) +
   labs(x = NULL, y = "B Coefficient") +
   theme_bw() +
   theme(
@@ -160,7 +165,7 @@ mod_plots_C <- mods_boot_68_C |>
   geom_errorbar(aes(ymin = lower_68, ymax = upper_68),
                 width = .2, alpha = 0.5) +
   labs(x = NULL, y = "C coefficient") +
-  facet_wrap(~resolution, nrow = 1, labeller = labeller(name = C_labs2)) +
+  facet_wrap(~resolution, nrow = 1, labeller = labeller(name = C_labs2, resolution = dat_labs)) +
   theme_bw() +
   theme(
     axis.text = element_markdown(size = 10, angle = 45, hjust = 1),
@@ -169,7 +174,18 @@ mod_plots_C <- mods_boot_68_C |>
     strip.background = element_rect(fill = NA)
   )
 
-mod_plots_B / mod_plots_C
+bootstrap_data_reduction <- mod_plots_B / mod_plots_C
+
+ggsave(
+  filename = "./figures/bootstrap_data_reduction.png",
+  plot = bootstrap_data_reduction,
+  device = "png",
+  dpi = 300,
+  width = 9,
+  height = 6,
+  units = "in"
+)
+
 
 # 500 reps ----------------------------------------------------------------
 
@@ -285,12 +301,21 @@ B_procession_plot <- ggplot(data = pars_long_bs) +
   facet_wrap(~prop, labeller = labeller(prop = prop_labs)) +
   theme_minimal() +
   theme(legend.position = "none",
-        axis.text.x = element_markdown(angle = 45),
-        strip.text = element_markdown(size = 8),
+        axis.text.x = element_markdown(size = 12),
+        strip.text = element_markdown(size = 11),
         strip.text.y = element_markdown(size = 12),
         panel.border = element_rect(color = "grey60", fill = NA, linewidth = 0.1)
   )
 
+ggsave(
+  filename = "./figures/replicate_data_reductionB.png",
+  plot = B_procession_plot,
+  device = "png",
+  dpi = 300,
+  width = 8,
+  height = 8,
+  units = "in"
+)
 
 
 # C sensitivity -----------------------------------------------------------
@@ -346,8 +371,18 @@ C_procession_plot_lin <- ggplot(data = pars_long_cs) +
              labeller = labeller(prop = prop_labs)) +
   theme_minimal() +
   theme(legend.position = "none",
-        axis.text.x = element_markdown(angle = 45),
-        strip.text = element_markdown(),
+        axis.text.x = element_markdown(size = 12),
+        strip.text = element_markdown(size = 11),
+        strip.text.y = element_markdown(size = 12),
         panel.border = element_rect(color = "grey60", fill = NA, linewidth = 0.1)
   )
 
+ggsave(
+  filename = "./figures/replicate_data_reductionC.png",
+  plot = C_procession_plot_lin,
+  device = "png",
+  dpi = 300,
+  width = 8,
+  height = 8,
+  units = "in"
+)

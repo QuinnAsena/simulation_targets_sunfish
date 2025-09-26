@@ -54,16 +54,16 @@ refit_func <- function(mod, n_refit = 10) {
 
 
 # The data for Sunfish Pond are from Johnson et al., in prep
-# a bit of wrandling is required
+# a bit of wrangling is required
 sunfish_pollen <- read_csv("./data/Sunfish_585_pollen_counts_bchron062722B_cleaned.csv")
 sunfish_ll <- read_csv("./data/Sunfish_LL_Recon_Feb22.csv")
 
 # Pull pollen columns only
 sunfish_pollen_only <- sunfish_pollen[-c(1:8)]
-# Remove spp with less than 20 count in whole core (recommended by lead author)
+# Remove spp with less than 20 count in whole core (recommended by Johnson and Shuman)
 filter_5_names <- names(which(colSums(sunfish_pollen_only) <= 20))
 
-# Remove some aquatic/semi-aquatic spp (recommended by lead author)
+# Remove some aquatic/semi-aquatic spp (recommended by Johnson and Shuman)
 aquatic_spp <- c(
   "Brasenia", "Nuphar",
   "Nym", "Nym.cell",
@@ -206,10 +206,10 @@ X <- sunfish_all_interp |>
 matplot(X, type = 'l')
 
 # set up parameters
-p <- ncol(X) + 1 # Number of independent variables plus intercept
+p <- ncol(X) + 1
 n <- ncol(Y)
 
-V.fixed = diag(n) # Covariance matrix of environmental variation in process eq
+V.fixed = diag(n)
 # V.fixed = matrix(NA, n, n) # other fomrms of V possible
 # V.fixed[1] = 1
 
@@ -229,7 +229,7 @@ B.start <- glmm_mod$B[2:p, , drop = F]
 
 sigma.start <- glmm_mod$sigma
 
-V.fixed = matrix(NA, n, n) # Covariance matrix of environmental variation in process eq
+V.fixed = matrix(NA, n, n)
 V.fixed[1] = 1
 
 V.start <- glmm_mod$V
@@ -501,65 +501,162 @@ ggsave(
   units = "in"
 )
 
-sunfish_grouped_long_holocene <- sunfish_spp_wide |>
-  filter(age <= 12070) |>
-  pivot_longer(-c(age))
 
-spp_count_plot <- ggplot(sunfish_grouped_long_holocene, aes(x = age, y = value)) +
+
+# Plotting data -----------------------------------------------------------
+
+
+# sunfish_grouped_long_holocene <- sunfish_spp_wide |>
+#   filter(age <= 12070) |>
+#   pivot_longer(-c(age))
+#
+# spp_count_plot <- ggplot(sunfish_grouped_long_holocene, aes(x = age, y = value)) +
+#   geom_area(colour = "grey90") +
+#   geom_segment(data = sunfish_grouped_long_holocene,
+#                aes(x = age, xend = age,
+#                    y = 0, yend = value), colour = "grey30", linewidth = 0.6) +
+#   scale_x_reverse() +
+#   coord_flip() +
+#   labs(y = "Pollen counts", x = "Time (ybp)") +
+#   facet_wrap(~name,
+#              nrow = 1) +
+#   theme_minimal() +
+#   theme(
+#     text = element_text(size = 10),
+#   )
+#
+# ll_plot <- ggplot(sunfish_ll |> filter(Age <= 12000),
+#                   aes(x = Age, y = LakeElev.cm.below.mod,
+#                       ymin = LowerBound, ymax = UpperBound)) +
+#   geom_line(linewidth = 0.3) +
+#   geom_ribbon(alpha = 0.3) +
+#   coord_flip() +
+#   scale_x_reverse()+
+#   labs(x = NULL, y = "Lake elevation \n (cm relative to modern)") +
+#   theme_minimal() +
+#   theme(
+#     text = element_text(size = 10),
+#     axis.text.y = element_blank()
+#   )
+#
+#
+# ll_plot <- sunfish_ll |>
+#   filter(Age <= 12000) |>
+#   mutate(panel = "Lake level") |>  # fake facet variable
+#   ggplot(aes(x = Age, y = LakeElev.cm.below.mod,
+#              ymin = LowerBound, ymax = UpperBound)) +
+#   geom_line(linewidth = 0.3) +
+#   geom_ribbon(alpha = 0.3) +
+#   coord_flip() +
+#   scale_x_reverse() +
+#   labs(x = NULL, y = "Lake elevation \n (cm relative to modern)") +
+#   theme_minimal() +
+#   theme(
+#     text = element_text(size = 10),
+#     axis.text.y = element_blank(),
+#   ) +
+#   facet_wrap(~panel)
+#
+# sunfish_esa <- spp_count_plot + ll_plot + plot_layout(widths = c(0.85, 0.15))
+#
+# ggsave(
+#   filename = "../images/sunfish_esa.svg",
+#   plot = sunfish_esa,
+#   device = "svg",
+#   width = 10.67,
+#   height = 6,
+#   units = "in"
+# )
+
+
+
+# Plotting data -----------------------------------------------------------
+
+
+names_list5 <- c(
+  other="other",
+  P.strobu="_P.strobus_",
+  Tsuga="_Tsuga_",
+  Betula="_Betula_",
+  Quercus="_Quercus_",
+  Fagus="_Fagus_"
+)
+
+pol_plot <- ggplot(sunfish_grouped_long, aes(x = age, y = value)) +
   geom_area(colour = "grey90") +
-  geom_segment(data = sunfish_grouped_long_holocene,
+  geom_segment(data = sunfish_grouped_long,
                aes(x = age, xend = age,
                    y = 0, yend = value), colour = "grey30", linewidth = 0.6) +
-  scale_x_reverse() +
+  scale_x_reverse(breaks = scales::breaks_pretty(n = 6)) +
   coord_flip() +
   labs(y = "Pollen counts", x = "Time (ybp)") +
-  facet_wrap(~name,
-             nrow = 1) +
+  facet_wrap(~variablename, nrow = 1,
+             labeller = labeller(variablename = as_labeller(names_list5))) +
   theme_minimal() +
   theme(
+    axis.text.x = element_markdown(angle = 45),
     text = element_text(size = 10),
+    strip.text = element_markdown(size = 9)
   )
 
-ll_plot <- ggplot(sunfish_ll |> filter(Age <= 12000),
-                  aes(x = Age, y = LakeElev.cm.below.mod,
-                      ymin = LowerBound, ymax = UpperBound)) +
-  geom_line(linewidth = 0.3) +
-  geom_ribbon(alpha = 0.3) +
-  coord_flip() +
-  scale_x_reverse()+
-  labs(x = NULL, y = "Lake elevation \n (cm relative to modern)") +
-  theme_minimal() +
-  theme(
-    text = element_text(size = 10),
-    axis.text.y = element_blank()
-  )
+# cov_plot <- sunfish_all |>
+#   select(bins, age, mean_ll) |>
+#   pivot_longer(-c(bins, age)) |>
+#   ggplot(aes(x = age, y = value)) +
+#     geom_point() +
+#     geom_line() +
+#     scale_x_reverse() +
+#     coord_flip() +
+#     labs(x = NULL, y = "Lake elevetion \n (cm relative to modern)") +
+#     facet_wrap(~ name, ncol = 1) +
+#     theme_minimal() +
+#     theme(
+#       text = element_text(size = 10),
+#       axis.text.y = element_blank(),
+#       strip.text = element_blank()
+#     )
 
+# ll_plot <- ggplot(sunfish_ll,
+#                   aes(x = Age, y = LakeElev.cm.below.mod,
+#                       ymin = LowerBound, ymax = UpperBound)) +
+#   geom_line(linewidth = 0.3) +
+#   geom_ribbon(alpha = 0.3) +
+#   coord_flip() +
+#   scale_x_reverse()+
+#   labs(x = NULL, y = "Lake elevation \n (cm relative to modern)") +
+#   theme_minimal() +
+#   theme(
+#     text = element_text(size = 10),
+#     axis.text.y = element_blank()
+#   )
 
 ll_plot <- sunfish_ll |>
-  filter(Age <= 12000) |>
-  mutate(panel = "Lake level") |>  # fake facet variable
+  mutate(panel = "Lake elevation") |>  # fake facet variable
   ggplot(aes(x = Age, y = LakeElev.cm.below.mod,
              ymin = LowerBound, ymax = UpperBound)) +
   geom_line(linewidth = 0.3) +
   geom_ribbon(alpha = 0.3) +
   coord_flip() +
   scale_x_reverse() +
-  labs(x = NULL, y = "Lake elevation \n (cm relative to modern)") +
+  labs(x = NULL, y = "cm relative to modern") +
   theme_minimal() +
   theme(
+    axis.text.x = element_markdown(angle = 45),
     text = element_text(size = 10),
-    axis.text.y = element_blank(),
+    strip.text = element_markdown(size = 9),
+    axis.text.y = element_blank()
   ) +
   facet_wrap(~panel)
 
-sunfish_esa <- spp_count_plot + ll_plot + plot_layout(widths = c(0.85, 0.15))
+
+palaeo_plot <- pol_plot + ll_plot + plot_layout(widths = c(0.85, 0.15))
 
 ggsave(
-  filename = "../images/sunfish_esa.svg",
-  plot = sunfish_esa,
-  device = "svg",
-  width = 10.67,
-  height = 6,
+  filename = "./figures/palaeo_plot.png",
+  plot = palaeo_plot,
+  device = "png",
+  dpi = 300,
+  width = 8,
+  height = 6.5,
   units = "in"
 )
-
