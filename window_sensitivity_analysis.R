@@ -380,3 +380,11 @@ ggsave(
   units = "in"
 )
 
+ggsave(
+  filename = "./figures/bootstrap_window_sensitivityC.svg",
+  plot = mod_plots_B,
+  device = "svg",
+  width = 8,
+  height = 6.5,
+  units = "in"
+)

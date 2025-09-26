@@ -124,6 +124,8 @@ mods_boot_68_B <- mods_boot_table |>
 dat_labs <- paste0("Y = ", rev(prop_dat))
 names(dat_labs) <- levels(mods_boot_68_B$resolution)
 
+X_labs <- c("x1.y2" = "B<sub>1, 2</sub>",
+            "x1.y3" = "B<sub>1, 3</sub>")
 
 mod_plots_B <- mods_boot_68_B |>
   ggplot(aes(x = name, y = boot_med)) +
@@ -131,9 +133,9 @@ mod_plots_B <- mods_boot_68_B |>
   geom_point(data = mods_boot_68_B, aes(x = name, y = targets), colour = "red", shape = 5) +
   geom_errorbar(aes(ymin = lower_68, ymax = upper_68),
                 width = .2, alpha = 0.5) +
-  # scale_color_manual(name = "Significance", labels = c("> 0.05", "< 0.05"),
-  #                    values = c("#202020", "#d80000")) +
-  facet_wrap(~ resolution, nrow = 1, labeller = labeller(resolution = dat_labs)) +
+  scale_x_discrete(labels = X_labs) +
+  facet_wrap(~ resolution, nrow = 1,
+             labeller = labeller(resolution = dat_labs)) +
   labs(x = NULL, y = "B Coefficient") +
   theme_bw() +
   theme(
@@ -165,7 +167,8 @@ mod_plots_C <- mods_boot_68_C |>
   geom_errorbar(aes(ymin = lower_68, ymax = upper_68),
                 width = .2, alpha = 0.5) +
   labs(x = NULL, y = "C coefficient") +
-  facet_wrap(~resolution, nrow = 1, labeller = labeller(name = C_labs2, resolution = dat_labs)) +
+  scale_x_discrete(labels = C_labs2) +
+  facet_wrap(~resolution, nrow = 1, labeller = labeller(resolution = dat_labs)) +
   theme_bw() +
   theme(
     axis.text = element_markdown(size = 10, angle = 45, hjust = 1),
@@ -181,11 +184,19 @@ ggsave(
   plot = bootstrap_data_reduction,
   device = "png",
   dpi = 300,
-  width = 9,
+  width = 10,
   height = 6,
   units = "in"
 )
 
+ggsave(
+  filename = "./figures/bootstrap_data_reduction.svg",
+  plot = bootstrap_data_reduction,
+  device = "svg",
+  width = 10,
+  height = 6,
+  units = "in"
+)
 
 # 500 reps ----------------------------------------------------------------
 
@@ -317,6 +328,14 @@ ggsave(
   units = "in"
 )
 
+ggsave(
+  filename = "./figures/replicate_data_reductionB.svg",
+  plot = B_procession_plot,
+  device = "svg",
+  width = 8,
+  height = 8,
+  units = "in"
+)
 
 # C sensitivity -----------------------------------------------------------
 
@@ -382,6 +401,15 @@ ggsave(
   plot = C_procession_plot_lin,
   device = "png",
   dpi = 300,
+  width = 8,
+  height = 8,
+  units = "in"
+)
+
+ggsave(
+  filename = "./figures/replicate_data_reductionC.svg",
+  plot = C_procession_plot_lin,
+  device = "svg",
   width = 8,
   height = 8,
   units = "in"

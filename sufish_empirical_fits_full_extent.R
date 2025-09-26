@@ -660,3 +660,17 @@ ggsave(
   height = 6.5,
   units = "in"
 )
+
+
+ggsave(
+  filename = "./figures/palaeo_plot.svg",
+  plot = palaeo_plot,
+  device = "svg",
+  width = 8,
+  height = 6.5,
+  units = "in"
+)
+
+
+
+
