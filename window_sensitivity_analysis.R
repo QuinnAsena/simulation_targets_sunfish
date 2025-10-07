@@ -357,7 +357,7 @@ mod_plots_B <- mods_boot_68_B |>
   scale_color_manual(name = "Significance", labels = c("> 0.05", "< 0.05"),
                      values = c("#202020", "#d80000")) +
   facet_wrap(~mod, labeller = labeller(mod = bin_labs)) +
-  labs(x = "Taxa", y = "Coefficient") +
+  labs(x = "Taxa", y = "Coefficient of lake level effect") +
   theme_bw() +
   theme(
     axis.text = element_markdown(size = 10, angle = 45, hjust = 1),

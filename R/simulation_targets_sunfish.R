@@ -4,6 +4,13 @@
 # library(MultinomialStateSpace)
 # source("./R/sim_funcs.R")
 
+# This script for testing the model was run during model development
+# before the model was wrapped up into a working package.
+# The model structure has not changed by publishing the package;
+# however, some of the sourced scripts are no longer included.
+# This script now exists as an archived version of the script used
+# to generate data for the publication.
+
 get_data <- function(file) {
   sunfish_counts_with_dates <- readRDS(file)
   sunfish_counts_with_dates <- sunfish_counts_with_dates[nrow(sunfish_counts_with_dates):1, , drop = F]

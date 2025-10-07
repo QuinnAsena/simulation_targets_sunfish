@@ -284,8 +284,10 @@ mnTS_mod_pqf <- mnTS(Y = Y[Tsample, ],
 end_time <- Sys.time()
 end_time - start_time
 
-mnTS_mod_pqf_refit <- refit_func(mnTS_mod_pqf, 5)
+mnTS_mod_pqf_refit <- refit_func(mnTS_mod_pqf, 2)
 lapply(mnTS_mod_pqf_refit, coef)
+saveRDS(mnTS_mod_pqf_refit, "./empirical_results/mnTS_mod_pqf_refit.rds")
+
 
 # res_pqf <- multinomialTS::boot(mnTS_mod_pqf_refit[[5]], 1500)
 # saveRDS(res, "./empirical_results/sunfish_mnts_ll_pqf_bootstraps_1000.rds")
@@ -505,74 +507,6 @@ ggsave(
 
 # Plotting data -----------------------------------------------------------
 
-
-# sunfish_grouped_long_holocene <- sunfish_spp_wide |>
-#   filter(age <= 12070) |>
-#   pivot_longer(-c(age))
-#
-# spp_count_plot <- ggplot(sunfish_grouped_long_holocene, aes(x = age, y = value)) +
-#   geom_area(colour = "grey90") +
-#   geom_segment(data = sunfish_grouped_long_holocene,
-#                aes(x = age, xend = age,
-#                    y = 0, yend = value), colour = "grey30", linewidth = 0.6) +
-#   scale_x_reverse() +
-#   coord_flip() +
-#   labs(y = "Pollen counts", x = "Time (ybp)") +
-#   facet_wrap(~name,
-#              nrow = 1) +
-#   theme_minimal() +
-#   theme(
-#     text = element_text(size = 10),
-#   )
-#
-# ll_plot <- ggplot(sunfish_ll |> filter(Age <= 12000),
-#                   aes(x = Age, y = LakeElev.cm.below.mod,
-#                       ymin = LowerBound, ymax = UpperBound)) +
-#   geom_line(linewidth = 0.3) +
-#   geom_ribbon(alpha = 0.3) +
-#   coord_flip() +
-#   scale_x_reverse()+
-#   labs(x = NULL, y = "Lake elevation \n (cm relative to modern)") +
-#   theme_minimal() +
-#   theme(
-#     text = element_text(size = 10),
-#     axis.text.y = element_blank()
-#   )
-#
-#
-# ll_plot <- sunfish_ll |>
-#   filter(Age <= 12000) |>
-#   mutate(panel = "Lake level") |>  # fake facet variable
-#   ggplot(aes(x = Age, y = LakeElev.cm.below.mod,
-#              ymin = LowerBound, ymax = UpperBound)) +
-#   geom_line(linewidth = 0.3) +
-#   geom_ribbon(alpha = 0.3) +
-#   coord_flip() +
-#   scale_x_reverse() +
-#   labs(x = NULL, y = "Lake elevation \n (cm relative to modern)") +
-#   theme_minimal() +
-#   theme(
-#     text = element_text(size = 10),
-#     axis.text.y = element_blank(),
-#   ) +
-#   facet_wrap(~panel)
-#
-# sunfish_esa <- spp_count_plot + ll_plot + plot_layout(widths = c(0.85, 0.15))
-#
-# ggsave(
-#   filename = "../images/sunfish_esa.svg",
-#   plot = sunfish_esa,
-#   device = "svg",
-#   width = 10.67,
-#   height = 6,
-#   units = "in"
-# )
-
-
-
-# Plotting data -----------------------------------------------------------
-
-
 names_list5 <- c(
   other="other",
   P.strobu="_P.strobus_",
@@ -599,36 +533,6 @@ pol_plot <- ggplot(sunfish_grouped_long, aes(x = age, y = value)) +
     strip.text = element_markdown(size = 9)
   )
 
-# cov_plot <- sunfish_all |>
-#   select(bins, age, mean_ll) |>
-#   pivot_longer(-c(bins, age)) |>
-#   ggplot(aes(x = age, y = value)) +
-#     geom_point() +
-#     geom_line() +
-#     scale_x_reverse() +
-#     coord_flip() +
-#     labs(x = NULL, y = "Lake elevetion \n (cm relative to modern)") +
-#     facet_wrap(~ name, ncol = 1) +
-#     theme_minimal() +
-#     theme(
-#       text = element_text(size = 10),
-#       axis.text.y = element_blank(),
-#       strip.text = element_blank()
-#     )
-
-# ll_plot <- ggplot(sunfish_ll,
-#                   aes(x = Age, y = LakeElev.cm.below.mod,
-#                       ymin = LowerBound, ymax = UpperBound)) +
-#   geom_line(linewidth = 0.3) +
-#   geom_ribbon(alpha = 0.3) +
-#   coord_flip() +
-#   scale_x_reverse()+
-#   labs(x = NULL, y = "Lake elevation \n (cm relative to modern)") +
-#   theme_minimal() +
-#   theme(
-#     text = element_text(size = 10),
-#     axis.text.y = element_blank()
-#   )
 
 ll_plot <- sunfish_ll |>
   mutate(panel = "Lake elevation") |>  # fake facet variable
@@ -673,4 +577,112 @@ ggsave(
 
 
 
+# Data and model plot
+sunfish_years <- sunfish_spp_wide$age
+sunfish_tsample <- mnTS_mod_pqf_refit[[2]]$Tsample
+ssm <- mnTS_mod_pqf_refit[[2]]
+Y_data <- mnTS_mod_pqf_refit[[2]]$Y
+
+Y <- matrix(NA, nrow = sunfish_tsample[length(sunfish_tsample)], ncol = ncol(Y_data))
+for (i in seq_along(sunfish_tsample)) {
+  Y[sunfish_tsample[i], ] <- as.matrix(Y_data[i, ])
+}
+colnames(Y) <- colnames(Y_data)
+
+sunfish_years_interp <- matrix(NA, nrow = sunfish_tsample[length(sunfish_tsample)], ncol = 1)
+for (i in seq_along(sunfish_tsample)) {
+  sunfish_years_interp[sunfish_tsample[i], ] <- as.matrix(sunfish_years[i])
+}
+sunfish_years_interp <- as.matrix(na.interp(sunfish_years_interp))
+colnames(sunfish_years_interp) <- "sunfish_years_interp"
+
+propY <- Y/rowSums(Y)
+colnames(propY) <- colnames(Y)
+
+se_y <- ssm$se.y.fitted
+colnames(se_y) <- colnames(propY)
+se_y <- se_y/rowSums(se_y)
+
+ss_se_y_plot <- cbind(sunfish_years_interp, se_y) %>%
+  as_tibble() %>%
+  mutate(cat = "se_y") %>%
+  pivot_longer(-c(sunfish_years_interp, cat))
+
+propY_plot <- cbind(sunfish_years_interp, propY) %>%
+  as_tibble() %>%
+  mutate(cat = "prop") %>%
+  pivot_longer(-c(sunfish_years_interp, cat)) %>%
+  mutate(se = ss_se_y_plot$value,
+         name = factor(name, levels = c("other", "P.strobu", "Tsuga", "Fagus", "Quercus", "Betula")))
+
+se_upper <- ssm$se.mu.upper.fitted
+colnames(se_upper) <- colnames(propY)
+
+ss_se_upper_plot <- cbind(sunfish_years_interp, se_upper) %>%
+  as_tibble %>%
+  mutate(cat = "se_upper") %>%
+  pivot_longer(-c(sunfish_years_interp, cat))
+
+se_lower <- ssm$se.mu.lower.fitted
+colnames(se_lower) <- colnames(propY)
+
+ss_se_lower_plot <- cbind(sunfish_years_interp, se_lower) %>%
+  as_tibble %>%
+  mutate(cat = "se_lower") %>%
+  pivot_longer(-c(sunfish_years_interp, cat))
+
+mu <- ssm$mu
+colnames(mu) <- colnames(propY)
+
+ss_mu_plot <- cbind(sunfish_years_interp, mu) %>%
+  as_tibble %>%
+  mutate(cat = "mu") %>%
+  pivot_longer(-c(sunfish_years_interp, cat)) %>%
+  mutate(se_upper = ss_se_upper_plot$value,
+         se_lower = ss_se_lower_plot$value,
+         name = factor(name, levels = c("other", "P.strobu", "Tsuga", "Fagus", "Quercus", "Betula")))
+
+
+names_list <- c(
+  other="other",
+  P.strobu="_P. Strobus_",
+  Tsuga="_Tsuga spp._",
+  Betula="_Betula spp._",
+  Quercus="_Quercus spp._",
+  Fagus="_Fagus spp._",
+  Betula="_Betula spp._"
+)
+
+all_spp <- bind_rows(ss_mu_plot, propY_plot)
+
+all_spp_plot <- ggplot(all_spp, aes(x = sunfish_years_interp, y = value,
+                                    ymin = se_lower, ymax = se_upper,
+                                    colour = cat, fill = cat)) +
+  geom_point(size = 1) +
+  geom_ribbon(alpha= 0.5, colour = NA) +
+  geom_line(linewidth = 0.3) +
+  facet_wrap(~name, labeller = as_labeller(names_list), nrow = 1) +
+  scale_x_reverse(breaks = c(13800, 10000, 5000, 0)) +
+  scale_y_continuous(breaks = c(0, 0.5, 1)) +
+scale_colour_brewer(palette="Paired") +
+  scale_fill_brewer(palette="Paired", labels = c("Fitted", "Observed")) +
+  coord_flip(ylim = c(0, 1)) +
+  guides(color = "none") +
+  labs(x = "Time (ybp)", y = "Relative abundances", fill = NULL) +
+  theme_minimal() +
+  theme(
+    strip.text = element_markdown(size = 9),
+    text = element_text(size = 9),
+    axis.text.x = element_text(),
+    legend.position = "bottom"
+  )
+
+ggsave(
+  filename = "./figures/spp_mss.svg",
+  plot = all_spp_plot,
+  device = "svg",
+  width = 8,
+  height = 6.5,
+  units = "in"
+)
 
