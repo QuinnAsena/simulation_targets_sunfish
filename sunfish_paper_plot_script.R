@@ -202,24 +202,40 @@ names_list_sim <- c(
 
 all_spp_sim <- bind_rows(ss_mu_plot_sim, propY_plot_sim)
 
-all_spp_plot_sim <- ggplot(all_spp_sim, aes(x = sim_time, y = value,
-                                    ymin = se_lower, ymax = se_upper,
-                                    colour = cat, fill = cat)) +
-  geom_point(size = 1) +
-  geom_ribbon(alpha= 0.5, colour = NA) +
-  geom_line(linewidth = 0.3) +
+all_spp_plot_sim <- ggplot(all_spp_sim, aes(x = sim_time, y = value)) +
+  geom_ribbon(
+    data = dplyr::filter(all_spp_sim, cat == "mu"),
+    aes(ymin = se_lower, ymax = se_upper, fill = cat),
+    alpha = 0.4, colour = NA) +
+  geom_line(
+    data = dplyr::filter(all_spp_sim, cat == "mu"),
+    aes(colour = cat), linewidth = 0.3) +
+  geom_point(
+    data = all_spp_sim, aes(colour = cat), size = 0.5) +
   facet_wrap(~name, labeller = as_labeller(names_list_sim)) +
-  scale_colour_brewer(palette="Paired") +
-  scale_fill_brewer(palette="Paired", labels = c("Fitted", "Observed")) +
+  scale_colour_manual(
+    values = c(
+      mu   = "#4C78A8",
+      prop = "#F58518"),
+      labels = c("Fitted", "Observed"),
+      name = NULL) +
+  scale_fill_manual(
+    values = c(mu = "#9ecae1"),
+    guide = "none"
+    # breaks = "mu",
+    # labels = "Fitted",
+    # name = NULL,
+  ) +
   coord_flip() +
-  guides(color = "none") +
   labs(x = NULL, y = "Relative abundances", fill = NULL) +
   theme_minimal() +
   theme(
     text = element_text(size = 10),
     axis.text.x = element_text(),
     axis.text.y = element_blank(),
-    legend.position = "bottom"
+    legend.position = "bottom",
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank()
   )
 
 
@@ -229,18 +245,20 @@ x_data <- tibble(sim_time = 1:140,
 x_plot <- ggplot(x_data, aes(x = sim_time, y = X)) +
   geom_line(linewidth = 0.3) +
   coord_flip() +
-  scale_x_continuous(breaks = scales::breaks_pretty(n = 6)) +
+  # scale_x_continuous(breaks = scales::breaks_pretty(n = 6)) +
   scale_y_continuous(breaks = c(0,1)) +
   labs(y = "X", x = "Simulation time") +
   theme_minimal() +
   theme(
     strip.text = element_blank(),
     text = element_text(size = 10),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.y = element_blank()
   )
 
 x_plot + all_spp_plot_sim + plot_layout(widths = c(.1, .9))
 sim_plot <- x_plot + all_spp_plot_sim + plot_layout(widths = c(.1, .9))
-ggsave(plot = sim_plot, filename = "../../mss-paper-resources/images/sim_plot.svg", width = 6.3, height = 6.5, units = "in")
+ggsave(plot = sim_plot, filename = "./figures/sim_plot.svg", width = 6.3, height = 6.5, units = "in")
 
 
 

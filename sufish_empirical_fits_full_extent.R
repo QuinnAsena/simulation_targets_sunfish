@@ -578,6 +578,8 @@ ggsave(
 
 
 # Data and model plot
+mnTS_mod_pqf_refit <- readRDS("./empirical_results/mnTS_mod_pqf_refit.rds")
+
 sunfish_years <- sunfish_spp_wide$age
 sunfish_tsample <- mnTS_mod_pqf_refit[[2]]$Tsample
 ssm <- mnTS_mod_pqf_refit[[2]]
@@ -645,37 +647,53 @@ ss_mu_plot <- cbind(sunfish_years_interp, mu) %>%
 
 names_list <- c(
   other="other",
-  P.strobu="_P. Strobus_",
-  Tsuga="_Tsuga spp._",
-  Betula="_Betula spp._",
-  Quercus="_Quercus spp._",
-  Fagus="_Fagus spp._",
-  Betula="_Betula spp._"
+  P.strobu="_P.strobus_",
+  Tsuga="_Tsuga_",
+  Betula="_Betula_",
+  Quercus="_Quercus_",
+  Fagus="_Fagus_",
+  Betula="_Betula_"
 )
 
 all_spp <- bind_rows(ss_mu_plot, propY_plot)
 
-all_spp_plot <- ggplot(all_spp, aes(x = sunfish_years_interp, y = value,
-                                    ymin = se_lower, ymax = se_upper,
-                                    colour = cat, fill = cat)) +
-  geom_point(size = 1) +
-  geom_ribbon(alpha= 0.5, colour = NA) +
-  geom_line(linewidth = 0.3) +
+all_spp_plot <- ggplot(all_spp, aes(x = sunfish_years_interp, y = value)) +
+  geom_ribbon(
+    data = dplyr::filter(all_spp, cat == "mu"),
+    aes(ymin = se_lower, ymax = se_upper, fill = cat),
+    alpha = 0.4, colour = NA) +
+  geom_line(
+    data = dplyr::filter(all_spp, cat == "mu"),
+    aes(colour = cat), linewidth = 0.3) +
+  geom_point(
+    data = all_spp, aes(colour = cat), size = 0.5) +
   facet_wrap(~name, labeller = as_labeller(names_list), nrow = 1) +
   scale_x_reverse(breaks = c(13800, 10000, 5000, 0)) +
   scale_y_continuous(breaks = c(0, 0.5, 1)) +
-scale_colour_brewer(palette="Paired") +
-  scale_fill_brewer(palette="Paired", labels = c("Fitted", "Observed")) +
+  scale_colour_manual(
+    values = c(
+      mu   = "#4C78A8",
+      prop = "#F58518"),
+    labels = c("Fitted", "Observed"),
+    name = NULL
+  ) +
+  scale_fill_manual(
+    values = c(mu = "#9ecae1"),
+    guide = "none"
+    # breaks = "mu",
+    # labels = "Fitted",
+    # name = NULL,
+  ) +
   coord_flip(ylim = c(0, 1)) +
-  guides(color = "none") +
-  labs(x = "Time (ybp)", y = "Relative abundances", fill = NULL) +
+  labs(x = "Time (ybp)", y = "Relative abundances") +
   theme_minimal() +
   theme(
     strip.text = element_markdown(size = 9),
     text = element_text(size = 9),
-    axis.text.x = element_text(),
-    legend.position = "bottom"
+    legend.position = "bottom",
+    panel.grid.minor.y = element_blank()
   )
+
 
 ggsave(
   filename = "./figures/spp_mss.svg",
@@ -685,4 +703,3 @@ ggsave(
   height = 6.5,
   units = "in"
 )
-
