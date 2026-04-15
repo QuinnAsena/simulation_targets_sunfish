@@ -703,3 +703,13 @@ ggsave(
   height = 6.5,
   units = "in"
 )
+
+ggsave(
+  filename = "./figures/spp_mss.png",
+  plot = all_spp_plot,
+  device = "png",
+  dpi = 300,
+  width = 8,
+  height = 6.5,
+  units = "in"
+)

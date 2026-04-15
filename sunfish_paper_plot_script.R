@@ -6,129 +6,130 @@ tar_load(c(sim_fit_time_sub_c5, sim_fit_pulse_sub_c5))
 ss_mod_list <- readRDS("./data/ss_seq_list.rds")
 
 # Data and model plot
-sunfish_years <- data_fit$sunfish_years
-sunfish_tsample <- data_fit$ss_mod$Tsample
-ssm <- ss_mod_list[[5]]
-Y_data <- ssm$Y
+# sunfish_years <- data_fit$sunfish_years
+# sunfish_tsample <- data_fit$ss_mod$Tsample
+# ssm <- ss_mod_list[[5]]
+# Y_data <- ssm$Y
 
-Y <- matrix(NA, nrow = sunfish_tsample[length(sunfish_tsample)], ncol = ncol(Y_data))
-for (i in seq_along(sunfish_tsample)) {
-  Y[sunfish_tsample[i], ] <- as.matrix(Y_data[i, ])
-}
-colnames(Y) <- colnames(Y_data)
+# Y <- matrix(NA, nrow = sunfish_tsample[length(sunfish_tsample)], ncol = ncol(Y_data))
+# for (i in seq_along(sunfish_tsample)) {
+#   Y[sunfish_tsample[i], ] <- as.matrix(Y_data[i, ])
+# }
+# colnames(Y) <- colnames(Y_data)
 
-sunfish_years_interp <- matrix(NA, nrow = sunfish_tsample[length(sunfish_tsample)], ncol = 1)
-for (i in seq_along(sunfish_tsample)) {
-  sunfish_years_interp[sunfish_tsample[i], ] <- as.matrix(sunfish_years[i])
-}
-sunfish_years_interp <- as.matrix(na.interp(sunfish_years_interp))
-colnames(sunfish_years_interp) <- "sunfish_years_interp"
+# sunfish_years_interp <- matrix(NA, nrow = sunfish_tsample[length(sunfish_tsample)], ncol = 1)
+# for (i in seq_along(sunfish_tsample)) {
+#   sunfish_years_interp[sunfish_tsample[i], ] <- as.matrix(sunfish_years[i])
+# }
+# sunfish_years_interp <- as.matrix(na.interp(sunfish_years_interp))
+# colnames(sunfish_years_interp) <- "sunfish_years_interp"
 
-propY <- Y/rowSums(Y)
-colnames(propY) <- colnames(ssm$Y)
+# propY <- Y/rowSums(Y)
+# colnames(propY) <- colnames(ssm$Y)
 
-se_y <- ssm$se.y.fitted
-colnames(se_y) <- colnames(propY)
-se_y <- se_y/rowSums(se_y)
+# se_y <- ssm$se.y.fitted
+# colnames(se_y) <- colnames(propY)
+# se_y <- se_y/rowSums(se_y)
 
-ss_se_y_plot <- cbind(sunfish_years_interp, se_y) %>%
-  as_tibble() %>%
-  mutate(cat = "se_y") %>%
-  pivot_longer(-c(sunfish_years_interp, cat))
+# ss_se_y_plot <- cbind(sunfish_years_interp, se_y) %>%
+#   as_tibble() %>%
+#   mutate(cat = "se_y") %>%
+#   pivot_longer(-c(sunfish_years_interp, cat))
 
-propY_plot <- cbind(sunfish_years_interp, propY) %>%
-  as_tibble %>%
-  mutate(cat = "prop") %>%
-  pivot_longer(-c(sunfish_years_interp, cat)) %>%
-  mutate(se = ss_se_y_plot$value,
-         name = factor(name, levels = c("other", "Pinus", "Tsuga", "Fagus", "Quercus")))
+# propY_plot <- cbind(sunfish_years_interp, propY) %>%
+#   as_tibble %>%
+#   mutate(cat = "prop") %>%
+#   pivot_longer(-c(sunfish_years_interp, cat)) %>%
+#   mutate(se = ss_se_y_plot$value,
+#          name = factor(name, levels = c("other", "Pinus", "Tsuga", "Fagus", "Quercus")))
 
-ggplot(propY_plot, aes(x = sunfish_years_interp, y = value, colour = name)) +
-  geom_point() +
-  geom_path() +
-  scale_x_reverse() +
-  facet_wrap(~name)
-
-
-se_upper <- ssm$se.mu.upper.fitted
-colnames(se_upper) <- colnames(propY)
-
-ss_se_upper_plot <- cbind(sunfish_years_interp, se_upper) %>%
-  as_tibble %>%
-  mutate(cat = "se_upper") %>%
-  pivot_longer(-c(sunfish_years_interp, cat))
-
-se_lower <- ssm$se.mu.lower.fitted
-colnames(se_lower) <- colnames(propY)
-
-ss_se_lower_plot <- cbind(sunfish_years_interp, se_lower) %>%
-  as_tibble %>%
-  mutate(cat = "se_lower") %>%
-  pivot_longer(-c(sunfish_years_interp, cat))
-
-mu <- ssm$mu
-colnames(mu) <- colnames(propY)
-
-ss_mu_plot <- cbind(sunfish_years_interp, mu) %>%
-  as_tibble %>%
-  mutate(cat = "mu") %>%
-  pivot_longer(-c(sunfish_years_interp, cat)) %>%
-  mutate(se_upper = ss_se_upper_plot$value,
-         se_lower = ss_se_lower_plot$value,
-         name = factor(name, levels = c("other", "Pinus", "Tsuga", "Fagus", "Quercus")))
+# ggplot(propY_plot, aes(x = sunfish_years_interp, y = value, colour = name)) +
+#   geom_point() +
+#   geom_path() +
+#   scale_x_reverse() +
+#   facet_wrap(~name)
 
 
-names_list <- c(
-  other="other",
-  Pinus="_Pinus spp._",
-  Tsuga="_Tsuga spp._",
-  Betula="_Betula spp._",
-  Quercus="_Quercus spp._",
-  Fagus="_Fagus spp._"
-)
+# se_upper <- ssm$se.mu.upper.fitted
+# colnames(se_upper) <- colnames(propY)
 
-all_spp <- bind_rows(ss_mu_plot, propY_plot)
+# ss_se_upper_plot <- cbind(sunfish_years_interp, se_upper) %>%
+#   as_tibble %>%
+#   mutate(cat = "se_upper") %>%
+#   pivot_longer(-c(sunfish_years_interp, cat))
 
-all_spp_plot <- ggplot(all_spp, aes(x = sunfish_years_interp, y = value,
-                                        ymin = se_lower, ymax = se_upper,
-                                        colour = cat, fill = cat)) +
-  geom_point(size = 1) +
-  geom_ribbon(alpha= 0.5, colour = NA) +
-  geom_line(linewidth = 0.3) +
-  facet_wrap(~name, labeller = as_labeller(names_list), nrow = 1) +
-  scale_x_reverse(breaks = scales::breaks_pretty(n = 6)) +
-  scale_y_continuous(breaks = scales::breaks_pretty(n = 4)) +
-  scale_colour_brewer(palette="Paired") +
-  scale_fill_brewer(palette="Paired", labels = c("Fitted", "Observed")) +
-  coord_flip(ylim = c(0, 1)) +
-  guides(color = "none") +
-  labs(x = "Time (ybp)", y = "Relative abundances", fill = NULL) +
-  theme_minimal() +
-  theme(
-    strip.text = element_markdown(size = 9),
-    text = element_text(size = 9),
-    axis.text.x = element_text(),
-    legend.position = "bottom"
-  )
+# se_lower <- ssm$se.mu.lower.fitted
+# colnames(se_lower) <- colnames(propY)
+
+# ss_se_lower_plot <- cbind(sunfish_years_interp, se_lower) %>%
+#   as_tibble %>%
+#   mutate(cat = "se_lower") %>%
+#   pivot_longer(-c(sunfish_years_interp, cat))
+
+# mu <- ssm$mu
+# colnames(mu) <- colnames(propY)
+
+# ss_mu_plot <- cbind(sunfish_years_interp, mu) %>%
+#   as_tibble %>%
+#   mutate(cat = "mu") %>%
+#   pivot_longer(-c(sunfish_years_interp, cat)) %>%
+#   mutate(se_upper = ss_se_upper_plot$value,
+#          se_lower = ss_se_lower_plot$value,
+#          name = factor(name, levels = c("other", "Pinus", "Tsuga", "Fagus", "Quercus")))
 
 
-prop_plot <- ggplot(propY_plot, aes(x = sunfish_years_interp, y = value)) +
-  geom_area(colour = "grey90") +
-  geom_col() +
-  scale_x_reverse(breaks = scales::breaks_pretty(n = 6)) +
-  coord_flip() +
-  # ylim(0, 0.5) +
-  labs(y = "Relative abundances", x = "Time (ybp)") +
-  facet_wrap(~name, labeller = as_labeller(names_list)) +
-  theme_minimal() +
-  theme(
-    strip.text = element_markdown(size = 9),
-    text = element_text(size = 9),
-  )
+# names_list <- c(
+#   other="other",
+#   Pinus="_Pinus spp._",
+#   Tsuga="_Tsuga spp._",
+#   Betula="_Betula spp._",
+#   Quercus="_Quercus spp._",
+#   Fagus="_Fagus spp._"
+# )
 
-prop_plot + all_spp_plot
+# all_spp <- bind_rows(ss_mu_plot, propY_plot)
 
-ggsave(plot = all_spp_plot, filename = "../../mss-paper-resources/images/palaeo_fitted_plot.svg", width = 6.3, height = 6.2, units = "in")
+# all_spp_plot <- ggplot(all_spp, aes(x = sunfish_years_interp, y = value,
+#                                         ymin = se_lower, ymax = se_upper,
+#                                         colour = cat, fill = cat)) +
+#   geom_point(size = 1) +
+#   geom_ribbon(alpha= 0.5, colour = NA) +
+#   geom_line(linewidth = 0.3) +
+#   facet_wrap(~name, labeller = as_labeller(names_list), nrow = 1) +
+#   scale_x_reverse(breaks = scales::breaks_pretty(n = 6)) +
+#   scale_y_continuous(breaks = scales::breaks_pretty(n = 4)) +
+#   scale_colour_brewer(palette="Paired") +
+#   scale_fill_brewer(palette="Paired", labels = c("Fitted", "Observed")) +
+#   coord_flip(ylim = c(0, 1)) +
+#   guides(color = "none") +
+#   labs(x = "Time (ybp)", y = "Relative abundances", fill = NULL) +
+#   theme_minimal() +
+#   theme(
+#     strip.text = element_markdown(size = 9),
+#     text = element_text(size = 9),
+#     axis.text.x = element_text(),
+#     legend.position = "bottom"
+#   )
+
+
+# prop_plot <- ggplot(propY_plot, aes(x = sunfish_years_interp, y = value)) +
+#   geom_area(colour = "grey90") +
+#   geom_col() +
+#   scale_x_reverse(breaks = scales::breaks_pretty(n = 6)) +
+#   coord_flip() +
+#   # ylim(0, 0.5) +
+#   labs(y = "Relative abundances", x = "Time (ybp)") +
+#   facet_wrap(~name, labeller = as_labeller(names_list)) +
+#   theme_minimal() +
+#   theme(
+#     strip.text = element_markdown(size = 9),
+#     text = element_text(size = 9),
+#   )
+
+# prop_plot + all_spp_plot
+
+# ggsave(plot = all_spp_plot, filename = "./figures/palaeo_fitted_plot.svg", width = 6.3, height = 6.2, units = "in")
+# ggsave(plot = all_spp_plot, filename = "./figures/palaeo_fitted_plot.png", width = 6.3, height = 6.2, units = "in", dpi = 300)
 
 
 # Data and model plot
@@ -259,6 +260,7 @@ x_plot <- ggplot(x_data, aes(x = sim_time, y = X)) +
 x_plot + all_spp_plot_sim + plot_layout(widths = c(.1, .9))
 sim_plot <- x_plot + all_spp_plot_sim + plot_layout(widths = c(.1, .9))
 ggsave(plot = sim_plot, filename = "./figures/sim_plot.svg", width = 6.3, height = 6.5, units = "in")
+ggsave(plot = sim_plot, filename = "./figures/sim_plot.png", width = 6.3, height = 6.5, units = "in", dpi = 300)
 
 
 
@@ -334,9 +336,10 @@ scenario_labs <- c(
 )
 
 
-X_labs <- c("x1.y2" = "B<sub>1, 2</sub>",
-            "x1.y3" = "B<sub>1, 3</sub>")
-
+X_labs <- c(
+  "x1.y2" = expression(B["1, 2"]),
+  "x1.y3" = expression(B["1, 3"])
+)
 
 B_procession_plot <- ggplot(data = pars_long_bs) +
   geom_violin(aes(x = name, y = value, fill = scenario, alpha = 0.5),
@@ -350,13 +353,14 @@ B_procession_plot <- ggplot(data = pars_long_bs) +
                                  scenario = scenario_labs)) +
   theme_minimal() +
   theme(legend.position = "none",
-        axis.text.x = element_markdown(angle = 45),
+        axis.text.x = element_text(angle = 45),
         strip.text = element_markdown(size = 8),
         strip.text.y = element_markdown(size = 12),
         panel.border = element_rect(color = "grey60", fill = NA, linewidth = 0.1)
         )
 
-ggsave(plot = B_procession_plot, filename = "../../mss-paper-resources/images/B_plot.svg", width = 6.3, height = 4, units = "in")
+ggsave(plot = B_procession_plot, filename = "./figures/B_plot.svg", width = 6.3, height = 4, units = "in")
+ggsave(plot = B_procession_plot, filename = "./figures/B_plot.png", width = 6.3, height = 4, units = "in", dpi = 300)
 
 
 pars_wide_cs <- bind_rows(pars, .id = "scenario") %>%
@@ -419,11 +423,12 @@ C_labs <- c("sp.y1.y1" = "sp.1, sp.1",
             "sp.y3.y2" = "sp.3, sp.2"
             )
 
-C_labs2 <- c("sp.y1.y1" = "C<sub>1, 1</sub>",
-            "sp.y2.y2" = "C<sub>2, 2</sub>",
-            "sp.y3.y3" = "C<sub>3, 3</sub>",
-            "sp.y2.y3" = "C<sub>2, 3</sub>",
-            "sp.y3.y2" = "C<sub>3, 2</sub>"
+C_labs2 <- c(
+  "sp.y1.y1" = expression(C["1, 1"]),
+  "sp.y2.y2" = expression(C["2, 2"]),
+  "sp.y3.y3" = expression(C["3, 3"]),
+  "sp.y2.y3" = expression(C["2, 3"]),
+  "sp.y3.y2" = expression(C["3, 2"])
 )
 
 C_procession_plot_lin <- ggplot(data = pars_long_cs_reordered %>% filter(scenario == "time_subsam")) +
@@ -438,13 +443,14 @@ C_procession_plot_lin <- ggplot(data = pars_long_cs_reordered %>% filter(scenari
              labeller = labeller(case = case_labs)) +
   theme_minimal() +
   theme(legend.position = "none",
-        axis.text.x = element_markdown(angle = 45),
+        axis.text.x = element_text(angle = 45),
         strip.text = element_markdown(),
         panel.border = element_rect(color = "grey60", fill = NA, linewidth = 0.1)
   )
 
 C_procession_plot_lin
-ggsave(plot = C_procession_plot_lin, filename = "../../mss-paper-resources/images/Clin_plot.svg", width = 6.3, height = 4.8, units = "in")
+ggsave(plot = C_procession_plot_lin, filename = "./figures/Clin_plot.svg", width = 6.3, height = 4.8, units = "in")
+ggsave(plot = C_procession_plot_lin, filename = "./figures/Clin_plot.png", width = 6.3, height = 4.8, units = "in", dpi = 300)
 
 
 
@@ -460,15 +466,11 @@ C_procession_plot_dis <- ggplot(data = pars_long_cs_reordered %>% filter(scenari
              labeller = labeller(case = case_labs)) +
   theme_minimal() +
   theme(legend.position = "none",
-        axis.text.x = element_markdown(angle = 45),
+        axis.text.x = element_text(angle = 45),
         strip.text = element_markdown(),
         panel.border = element_rect(color = "grey60", fill = NA, linewidth = 0.1)
   )
 
 C_procession_plot_dis
-ggsave(plot = C_procession_plot_dis, filename = "../../mss-paper-resources/images/Cdis_plot.svg", width = 6.3, height = 4.8, units = "in")
-
-
-
-
-
+ggsave(plot = C_procession_plot_dis, filename = "./figures/Cdis_plot.svg", width = 6.3, height = 4.8, units = "in")
+ggsave(plot = C_procession_plot_dis, filename = "./figures/Cdis_plot.png", width = 6.3, height = 4.8, units = "in", dpi = 300)

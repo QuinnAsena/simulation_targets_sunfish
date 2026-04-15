@@ -47,3 +47,5 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+/empirical_results
+/sensitivity_results
